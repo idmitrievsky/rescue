@@ -23,26 +23,26 @@ def try_eval(
         return _e.value
 
 
-class _ExceptionHandler(Generic[_ExceptionType]):
+class _ExceptClause(Generic[_ExceptionType]):
     def __init__(
         self,
         exc_type: Type[_ExceptionType],
-        handler_fn: Callable[[_ExceptionType], None],
+        except_fn: Callable[[_ExceptionType], None],
     ):
         self.exc_type = exc_type
-        self.handler_fn = handler_fn
+        self.except_fn = except_fn
 
     def __call__(self, exception: _ExceptionType) -> None:
-        self.handler_fn(exception)
+        self.except_fn(exception)
 
 
-def can_handle(
+def can_except(
     exc_type: Type[_ExceptionType],
-) -> Callable[[Callable[[_ExceptionType], None]], _ExceptionHandler[_ExceptionType]]:
+) -> Callable[[Callable[[_ExceptionType], None]], _ExceptClause[_ExceptionType]]:
     def decorator(
-        handler_fn: Callable[[_ExceptionType], None]
-    ) -> _ExceptionHandler[_ExceptionType]:
-        return _ExceptionHandler(exc_type, handler_fn)
+        except_fn: Callable[[_ExceptionType], None]
+    ) -> _ExceptClause[_ExceptionType]:
+        return _ExceptClause(exc_type, except_fn)
 
     return decorator
 
@@ -61,54 +61,54 @@ class HandlerInvocation(ExceptionState[_ExceptionType]):
         self.handler = handler_fn
 
 
-def eval_with_handler(
+def eval_with_except(
     partial_fn: PartialFn[_ExceptionType, _ReturnType],
-    handler_fn: Callable[[_ExceptionType], None],
+    except_fn: Callable[[_ExceptionType], None],
 ) -> Union[_ReturnType, HandlerInvocation[_ExceptionType]]:
     try:
         exception = partial_fn.send(None)
     except StopIteration as _e:
         return _e.value
 
-    handler_fn(exception)
+    except_fn(exception)
     partial_fn.close()
 
-    if isinstance(handler_fn, _ExceptionHandler):
-        handler_fn = handler_fn.handler_fn
+    if isinstance(except_fn, _ExceptClause):
+        except_fn = except_fn.except_fn
 
-    return HandlerInvocation(exception, handler_fn)
+    return HandlerInvocation(exception, except_fn)
 
 
 def with_handler(
     partial_fn: PartialFn[Exception, _ReturnType],
-    handler: _ExceptionHandler[_ExceptionType],
+    except_clause: _ExceptClause[_ExceptionType],
 ) -> PartialFn[Exception, Union[_ReturnType, ExceptionState]]:
     try:
         exception = partial_fn.send(None)
     except StopIteration as _e:
         return _e.value
 
-    exc_type = handler.exc_type
+    exc_type = except_clause.exc_type
 
     while True:
         try:
             # transfer control to the caller
             # receive the value if the caller decided to send a value in
             if isinstance(exception, exc_type):
-                handler(exception)
+                except_clause(exception)
                 partial_fn.close()
-                return HandlerInvocation(exception, handler.handler_fn)
+                return HandlerInvocation(exception, except_clause.except_fn)
 
             resume_value = yield exception
         except GeneratorExit as _e:
-            # if the caller decided to close us, close `gtr` first
+            # if the caller decided to close us, close `fn` first
             partial_fn.close()
             raise _e
         except BaseException:  # noqa: PIE786
             # if the caller decided to throw an exception
             exc_info = sys.exc_info()
             try:
-                # throw the exception into `gtr`
+                # throw the exception into `fn`
                 # at this point it can yield another value
                 # return a value by raising stop iteration
                 # or raise exception that we should not handle
@@ -125,13 +125,3 @@ def with_handler(
                 break
 
     return return_value
-
-
-def evaluate(
-    partial_fn: Generator[None, None, _ReturnType],
-) -> _ReturnType:
-    try:
-        next(partial_fn)
-        raise AssertionError("argument doesn't yield")
-    except StopIteration as _e:
-        return _e.value

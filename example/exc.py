@@ -1,6 +1,6 @@
 from typing import ContextManager, Union
 
-from enact.exc import PartialFn, can_handle, eval_with_handler, throw
+from enact.exc import PartialFn, can_except, eval_with_except, throw
 from example.mut import Cell
 
 
@@ -48,13 +48,13 @@ def increment_cell(cell: Cell[int], bound: int) -> PartialFn[ValueError, None]:
 def fill_cell(count: int, bound: int) -> int:
     cell: Cell[int] = Cell(content=0)
 
-    @can_handle(ValueError)
+    @can_except(ValueError)
     def set_zero(_: ValueError) -> None:
         cell.content = 0
 
     for _ in range(count):
         partial_fn = increment_cell(cell, bound)
-        eval_with_handler(partial_fn, set_zero)
+        eval_with_except(partial_fn, set_zero)
         if cell.content == 0:
             break
 
