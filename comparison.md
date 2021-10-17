@@ -69,9 +69,7 @@ assert flow(
 ```
 
 ```python
-from returns.result import Result, Success, Failure
-from returns.pointfree import bind
-from returns.pipeline import flow
+from enact.exc import throw, try_eval, PartialFn
 
 def regular_function(arg: int) -> float:
     return float(arg)
