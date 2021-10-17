@@ -56,6 +56,16 @@ It seems that the latter question has a solution – documentation. But for the 
 
 So the only real reliable solution is to read the implementation of every function we use. And when we do that we should remember that any call of any other function can raise an exception, so we should read the implementation of **the entire call tree**. And that's how our ability for local reasoning goes down the drain.
 
+### Control flow
+
+In Python the control flow is structured, which means you can follow it with your eyes from one line to the next. Even though `if` statements and `for` loops can skip some lines, they are bounded but function/module scope. The only ways to jump between scopes are:
+- to call a function (down the stack)
+- return a value (up the stack)
+
+The call stack makes it trivial to follow control flow because control eventually returns to the call site.
+
+Except exceptions don’t respect the control flow of your program. When we raise an exception the control is transferred _somewhere_ up the call stack, but not to the call site. This adds a dimension to our code that we have to keep track of. The inability to follow every sequence of operations can lead to corrupted state and lacking test coverage.
+
 ## Example
 ```python
 from enact.exc import try_eval, throw
