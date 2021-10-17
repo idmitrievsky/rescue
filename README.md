@@ -64,7 +64,7 @@ In Python the control flow is structured, which means you can follow it with you
 
 The call stack makes it trivial to follow control flow because control eventually returns to the call site.
 
-Except exceptions don’t respect the control flow of your program. When we raise an exception the control is transferred _somewhere_ up the call stack, but not to the call site. This adds a dimension to our code that we have to keep track of. The inability to follow every sequence of operations can lead to corrupted state and lacking test coverage.
+Except exceptions don’t respect the control flow of your program. When we raise an exception the control is transferred _somewhere_ up the call stack, but not to the call site. This adds a dimension to our code that we have to keep track of. The inability to follow the execution sequence can lead to corrupted state and lacking test coverage.
 
 ## Example
 ```python
