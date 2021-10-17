@@ -11,7 +11,7 @@
 </p>
 
 ## Rationale
-I really (and I mean **really**) enjoy when type checker catches a mistake before I even run the code. That gratification makes you feel the benefits of type annotating as much of your code as possible. And almost any codebase you can type annotate in its entirety, but with one exception: _exceptions_.
+I really (and I mean **really**) enjoy when type checker catches a mistake before I even run the code. That gratification makes you feel the benefits of type annotating as much of your code as possible. And we type annotate almost any codebase in its entirety, but with one exception: _exceptions_.
 
 Python makes heavy use of exceptions due to its _ask for forgiveness not permission_ philosophy. But exceptions have specific flaws that `enact` tries to address:
 - exceptions hurt your ability for local reasoning
