@@ -1,26 +1,21 @@
 from contextlib import contextmanager
-from typing import Callable, Generator, Type, TypeVar, Union
+from typing import Callable, Generator, TypeVar, Union
 
 import pytest
 
 from enact.core import evaluate
-from enact.exc import (
-    ExceptionState,
-    HandlerInvocation,
-    can_except,
-    eval_with_except,
-    try_eval,
-    with_handler,
-)
+from enact.exc import can_except, eval_with_except, try_eval, with_handler
 from example.exc import crush, echo_even, echo_even_number, throw_inside_context_manager
 from example.mut import Cell
 
 T = TypeVar("T")
+R = TypeVar("R")
 
 
-def exc_saver(cell: Cell[T]) -> Callable[[T], None]:
-    def write_exc_to_cell(exception: T) -> None:
+def exc_saver(cell: Cell[T], default: R) -> Callable[[T], R]:
+    def write_exc_to_cell(exception: T) -> R:
         cell.content = exception
+        return default
 
     return write_exc_to_cell
 
@@ -74,18 +69,22 @@ def test_can_handle_will_call_argument() -> None:
 
 def test_eval_with_handler_on_err_handler_invocation() -> None:
     exc_cell: Cell[ValueError] = Cell()
+    default = 0
 
-    return_value = eval_with_except(echo_even(1), exc_saver(exc_cell))
+    return_value = eval_with_except(echo_even(1), exc_saver(exc_cell, default=default))
 
-    assert isinstance(return_value, HandlerInvocation)
+    assert return_value == default
     assert isinstance(exc_cell.content, ValueError)
 
 
 def test_eval_with_handler_on_ok_return_value() -> None:
     even_int = 2
+    a_default = 0
     exc_cell: Cell[ValueError] = Cell()
 
-    return_value = eval_with_except(echo_even(even_int), exc_saver(exc_cell))
+    return_value = eval_with_except(
+        echo_even(even_int), exc_saver(exc_cell, default=a_default)
+    )
 
     assert return_value == even_int
     assert exc_cell.content is None
@@ -103,6 +102,7 @@ def trace_manager(
 
 
 def test_eval_with_handler_context_manager_exit_on_err() -> None:
+    a_default = 0
     exc_cell: Cell[ValueError] = Cell()
     enter_cell: Cell[bool] = Cell()
     exit_cell: Cell[bool] = Cell()
@@ -110,7 +110,7 @@ def test_eval_with_handler_context_manager_exit_on_err() -> None:
     manager = trace_manager(enter_cell, exit_cell)
     partial_fn = throw_inside_context_manager(manager)
 
-    eval_with_except(partial_fn, exc_saver(exc_cell))
+    eval_with_except(partial_fn, exc_saver(exc_cell, default=a_default))
 
     assert exit_cell.content
 
@@ -118,9 +118,14 @@ def test_eval_with_handler_context_manager_exit_on_err() -> None:
 def test_handler_is_not_invoked_when_no_throw() -> None:
     type_err_cell: Cell[TypeError] = Cell()
     value_err_cell: Cell[ValueError] = Cell()
+    a_default = -1
 
-    type_err_handler = can_except(TypeError)(exc_saver(type_err_cell))
-    value_err_handler = can_except(ValueError)(exc_saver(value_err_cell))
+    type_err_handler = can_except(TypeError)(
+        exc_saver(type_err_cell, default=a_default)
+    )
+    value_err_handler = can_except(ValueError)(
+        exc_saver(value_err_cell, default=a_default)
+    )
 
     partial_fn = echo_even_number(0)
 
@@ -138,23 +143,23 @@ def test_handler_is_not_invoked_when_no_throw() -> None:
 
 
 @pytest.mark.parametrize(
-    "input_value, check_type_cell_content, check_value_cell_content, return_value_type",
+    "input_value, check_type_cell_content, check_value_cell_content, default",
     [
-        ("str", True, None, HandlerInvocation),
-        (1, None, True, HandlerInvocation),
+        ("str", True, None, 0),
+        (1, None, True, 2),
     ],
 )
 def test_multiple_handlers(
     input_value: Union[int, str],
     check_type_cell_content: bool,
     check_value_cell_content: bool,
-    return_value_type: Type[ExceptionState],
+    default: int,
 ) -> None:
     type_err_cell: Cell[TypeError] = Cell()
     value_err_cell: Cell[ValueError] = Cell()
 
-    type_err_handler = can_except(TypeError)(exc_saver(type_err_cell))
-    value_err_handler = can_except(ValueError)(exc_saver(value_err_cell))
+    type_err_handler = can_except(TypeError)(exc_saver(type_err_cell, default=0))
+    value_err_handler = can_except(ValueError)(exc_saver(value_err_cell, default=2))
 
     partial_fn = echo_even_number(input_value)
 
@@ -166,7 +171,7 @@ def test_multiple_handlers(
         value_err_handler,
     )
 
-    assert isinstance(evaluate(total_fn), return_value_type)
+    assert evaluate(total_fn) == default
 
     if check_type_cell_content:
         assert isinstance(type_err_cell.content, type_err_handler.exc_type)

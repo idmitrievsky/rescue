@@ -13,6 +13,7 @@ def answer_two(_ask: Ask[int]) -> Generator[int, None, None]:
     yield 2
 
 
-def add(x: int) -> Generator[Ask[int], int, int]:
+def add() -> Generator[Ask[int], int, int]:
+    x = yield from Ask[int]().perform()
     y = yield from Ask[int]().perform()
     return x + y
