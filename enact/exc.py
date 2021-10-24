@@ -37,21 +37,21 @@ class _TotalExcHandler(Generic[_ExceptionType, _ReturnType]):
         return self.except_fn(exception)
 
 
-class _PartialExcHandler(Generic[_ExceptionType, _HandlerExceptionType, _ReturnType]):
+class PartialExcHandler(Generic[_ExceptionType, _HandlerExceptionType, _ReturnType]):
     def __init__(
         self,
         exc_type: Type[_ExceptionType],
-        except_fn: Callable[
+        exc_handler: Callable[
             [_ExceptionType], Generator[_HandlerExceptionType, None, _ReturnType]
         ],
     ):
         self.exc_type = exc_type
-        self.except_fn = except_fn
+        self.exc_handler = exc_handler
 
     def __call__(
         self, exception: _ExceptionType
     ) -> Generator[_HandlerExceptionType, None, _ReturnType]:
-        return self.except_fn(exception)
+        return self.exc_handler(exception)
 
 
 def total_exc_handler(
@@ -72,14 +72,14 @@ def partial_exc_handler(
     exc_type: Type[_ExceptionType],
 ) -> Callable[
     [Callable[[_ExceptionType], Generator[_HandlerExceptionType, None, _ReturnType]]],
-    _PartialExcHandler[_ExceptionType, _HandlerExceptionType, _ReturnType],
+    PartialExcHandler[_ExceptionType, _HandlerExceptionType, _ReturnType],
 ]:
     def decorator(
         except_fn: Callable[
             [_ExceptionType], Generator[_HandlerExceptionType, None, _ReturnType]
         ]
-    ) -> _PartialExcHandler[_ExceptionType, _HandlerExceptionType, _ReturnType]:
-        return _PartialExcHandler(exc_type, except_fn)
+    ) -> PartialExcHandler[_ExceptionType, _HandlerExceptionType, _ReturnType]:
+        return PartialExcHandler(exc_type, except_fn)
 
     return decorator
 
@@ -103,7 +103,7 @@ def with_handler(
     partial_fn: PartialFn[Exception, _ReturnType],
     except_clause: Union[
         _TotalExcHandler[_ExceptionType, _ReturnType],
-        _PartialExcHandler[_ExceptionType, _HandlerExceptionType, _ReturnType],
+        PartialExcHandler[_ExceptionType, _HandlerExceptionType, _ReturnType],
     ],
 ) -> PartialFn[Exception, _ReturnType]:
     try:

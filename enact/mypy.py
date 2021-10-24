@@ -25,7 +25,7 @@ def function_callback(ctx: FunctionContext) -> TypeType:
     elif isinstance(handler_type, Instance):
         drop_exc_type = handler_type.args[0]
 
-        if handler_type.type.fullname == "enact.exc._PartialExcHandler":
+        if handler_type.type.fullname == "enact.exc.PartialExcHandler":
             partial_handler_exc_type = _frozen_set_from_type(handler_type.args[1])
     else:
         raise AssertionError(

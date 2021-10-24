@@ -1,6 +1,13 @@
-from typing import ContextManager, Union
+from typing import ContextManager, Type, TypeVar, Union
 
-from enact.exc import PartialFn, eval_with_exc_handler, throw, total_exc_handler
+from enact.exc import (
+    PartialExcHandler,
+    PartialFn,
+    eval_with_exc_handler,
+    partial_exc_handler,
+    throw,
+    total_exc_handler,
+)
 from example.mut import Cell
 
 
@@ -60,3 +67,19 @@ def fill_cell(count: int, bound: int) -> int:
 
     assert cell.content is not None, "no such cell"
     return cell.content
+
+
+E = TypeVar("E", bound=Exception)
+T = TypeVar("T")
+
+
+def drop_exc_with_runtime_error_on_match(
+    exc_type: Type[E], pattern: str, default: T
+) -> PartialExcHandler[E, RuntimeError, T]:
+    @partial_exc_handler(exc_type)
+    def handler(exc: E) -> PartialFn[RuntimeError, T]:
+        if pattern in str(exc):
+            yield from throw(RuntimeError("match pattern in error"))
+        return default
+
+    return handler
