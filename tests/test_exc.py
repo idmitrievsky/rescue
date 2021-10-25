@@ -4,7 +4,7 @@ from typing import Callable, Generator, TypeVar
 import pytest
 
 from enact.core import evaluate
-from enact.exc import eval_with_exc_handler, total_exc_handler, try_eval, with_handler
+from enact.exc import eval_with_exc_handler, exc_handler, try_eval, with_handler
 from example.exc import (
     crush,
     drop_exc_with_runtime_error_on_match,
@@ -66,7 +66,7 @@ def test_total_exc_handler_will_call_argument() -> None:
         nonlocal call_count
         call_count += 1
 
-    handler = total_exc_handler(RuntimeError)(handler_fn)
+    handler = exc_handler(RuntimeError)(handler_fn)
 
     handler(RuntimeError("check"))
 
@@ -127,7 +127,7 @@ def test_with_handler_on_no_throw_return_value() -> None:
     value_err_cell: Cell[ValueError] = Cell()
     a_default = -1
 
-    value_err_handler = total_exc_handler(ValueError)(
+    value_err_handler = exc_handler(ValueError)(
         exc_saver(value_err_cell, default=a_default)
     )
 
@@ -150,10 +150,10 @@ def test_with_handler_composition_on_type_throw_invoke_type_handler() -> None:
     a_default = 0
     another_default = 2
 
-    type_err_handler = total_exc_handler(TypeError)(
+    type_err_handler = exc_handler(TypeError)(
         exc_saver(type_err_cell, default=a_default)
     )
-    value_err_handler = total_exc_handler(ValueError)(
+    value_err_handler = exc_handler(ValueError)(
         exc_saver(value_err_cell, default=another_default)
     )
 
@@ -180,10 +180,10 @@ def test_with_handler_composition_on_value_throw_invoke_value_handler() -> None:
     a_default = 0
     another_default = 2
 
-    type_err_handler = total_exc_handler(TypeError)(
+    type_err_handler = exc_handler(TypeError)(
         exc_saver(type_err_cell, default=another_default)
     )
-    value_err_handler = total_exc_handler(ValueError)(
+    value_err_handler = exc_handler(ValueError)(
         exc_saver(value_err_cell, default=a_default)
     )
 
@@ -207,7 +207,7 @@ def test_with_handler_on_partial_handler_throw_invoke_next_handler() -> None:
     ignored_default = 0
 
     runtime_err_cell: Cell[RuntimeError] = Cell()
-    runtime_err_handler = total_exc_handler(RuntimeError)(
+    runtime_err_handler = exc_handler(RuntimeError)(
         exc_saver(runtime_err_cell, default=a_default)
     )
 

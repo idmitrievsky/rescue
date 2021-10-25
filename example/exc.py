@@ -1,22 +1,22 @@
 from typing import ContextManager, Type, TypeVar, Union
 
 from enact.exc import (
-    PartialExcHandler,
-    PartialFn,
+    ExcHandlerWithFx,
+    ReturnWithFx,
     eval_with_exc_handler,
-    partial_exc_handler,
+    exc_handler,
+    exc_handler_with_fx,
     throw,
-    total_exc_handler,
 )
 from example.mut import Cell
 
 
-def crush() -> PartialFn[RuntimeError, int]:
+def crush() -> ReturnWithFx[RuntimeError, int]:
     yield from throw(RuntimeError("not ok"))
     return 0
 
 
-def echo_even(x: int) -> PartialFn[ValueError, int]:
+def echo_even(x: int) -> ReturnWithFx[ValueError, int]:
     if x % 2 != 0:
         yield from throw(ValueError("x must be an even number"))
     return x
@@ -24,7 +24,7 @@ def echo_even(x: int) -> PartialFn[ValueError, int]:
 
 def throw_inside_context_manager(
     manager: ContextManager[None],
-) -> PartialFn[ValueError, int]:
+) -> ReturnWithFx[ValueError, int]:
     with manager:
         yield from throw(ValueError("inside context manager"))
         return 0
@@ -32,7 +32,7 @@ def throw_inside_context_manager(
 
 def echo_even_number(
     x: Union[int, str]
-) -> PartialFn[Union[ValueError, TypeError], int]:
+) -> ReturnWithFx[Union[ValueError, TypeError], int]:
     if isinstance(x, str):
         yield from throw(TypeError("x must be a number"))
 
@@ -44,7 +44,7 @@ def echo_even_number(
     return x
 
 
-def increment_cell(cell: Cell[int], bound: int) -> PartialFn[ValueError, None]:
+def increment_cell(cell: Cell[int], bound: int) -> ReturnWithFx[ValueError, None]:
     assert cell.content is not None, "no such cell"
 
     if cell.content + 1 >= bound:
@@ -55,7 +55,7 @@ def increment_cell(cell: Cell[int], bound: int) -> PartialFn[ValueError, None]:
 def fill_cell(count: int, bound: int) -> int:
     cell: Cell[int] = Cell(content=0)
 
-    @total_exc_handler(ValueError)
+    @exc_handler(ValueError)
     def set_zero(_: ValueError) -> None:
         cell.content = 0
 
@@ -75,9 +75,9 @@ T = TypeVar("T")
 
 def drop_exc_with_runtime_error_on_match(
     exc_type: Type[E], pattern: str, default: T
-) -> PartialExcHandler[E, RuntimeError, T]:
-    @partial_exc_handler(exc_type)
-    def handler(exc: E) -> PartialFn[RuntimeError, T]:
+) -> ExcHandlerWithFx[E, RuntimeError, T]:
+    @exc_handler_with_fx(exc_type)
+    def handler(exc: E) -> ReturnWithFx[RuntimeError, T]:
         if pattern in str(exc):
             yield from throw(RuntimeError("match pattern in error"))
         return default

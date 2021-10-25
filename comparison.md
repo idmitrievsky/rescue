@@ -15,13 +15,15 @@ user_search_result = find_user(0)  # id 0 does not exist!
 ```
 
 ```python
-from enact.exc import throw, try_eval, PartialFn
+from enact.exc import throw, try_eval, ReturnWithFx
 
-def find_user(user_id: int) -> PartialFn[ValueError, 'User']:
+
+def find_user(user_id: int) -> ReturnWithFx[ValueError, 'User']:
     user = User.objects.filter(id=user_id)
     if user.exists():
         return user[0]
     yield from throw(ValueError('User was not found'))
+
 
 user_search_result = try_eval(find_user(1))
 # => User{id: 1, ...}
@@ -69,22 +71,27 @@ assert flow(
 ```
 
 ```python
-from enact.exc import throw, try_eval, PartialFn
+from enact.exc import throw, try_eval, ReturnWithFx
+
 
 def regular_function(arg: int) -> float:
     return float(arg)
 
-def returns_container(arg: float) -> PartialFn[ValueError, str]:
+
+def returns_container(arg: float) -> ReturnWithFx[ValueError, str]:
     if arg != 0:
         return str(arg)
     yield from throw(ValueError('Wrong arg'))
 
+
 def also_returns_container(arg: str) -> str:
     return arg + '!'
 
-def flow(x: int) -> PartialFn[ValueError, str]:
+
+def flow(x: int) -> ReturnWithFx[ValueError, str]:
     y = yield from returns_container(regular_function)
     return also_returns_container(y)
+
 
 try_eval(flow(1))
 try_eval(flow(0))
