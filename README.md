@@ -15,6 +15,12 @@
 - never forget to handle an exception
 - build type-safe error handling abstractions
 
+> It is also possible to use `enact` for type-safe dependency injection, but the API for that is not stable yet.
+
+## Installation
+```bash
+poetry add enact
+```
 
 ## Example
 ```python
