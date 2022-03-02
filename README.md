@@ -462,5 +462,5 @@ test coverage.
 - [Yield: Mainstream Delimited Continuations](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.398.9600&rep=rep1&type=pdf)
   by Roshan P. James and Amr Sabry
 - [A Tour of Koka](https://koka-lang.github.io/koka/doc/book.html#tour) by Daan Leijen
-- [mypy and error handling](https://beepb00p.xyz/mypy-error-handling.html) by karlicoss
-- [Python exceptions considered an anti-pattern](https://sobolevn.me/2019/02/python-exceptions-considered-an-antipattern) by Nikita Sobolev
+- [Mypy and Error Handling](https://beepb00p.xyz/mypy-error-handling.html) by karlicoss
+- [Python Exceptions Considered an Anti-Pattern](https://sobolevn.me/2019/02/python-exceptions-considered-an-antipattern) by Nikita Sobolev
