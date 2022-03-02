@@ -358,7 +358,7 @@ You can [bind](#bind) error handlers to a generator to reduce its error type to 
 
 ### `asyncio` support
 
-It's possible to use `fiasko` with `asyncio` code, but:
+It's possible to use `rescue` with `asyncio` code, but:
 - you must avoid `async/await` syntax
 - you must annotate your top-level main function with `Generator[None, None, None]`
 - you must not call `unwrap` on async generator functions
