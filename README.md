@@ -19,8 +19,9 @@
 ---
 
 ```python 
-from rescue import bind, unwrap, wrap_into_exc_handler
 import requests
+
+from rescue import bind, unwrap, wrap_into_exc_handler
 
 def safe_get(
   url: str
@@ -263,7 +264,7 @@ def mul_even(x: int, n: int) -> Generator[ValueError, None, int]:
 
 ```python
 from typing import Generator
-from rescue.core import throw
+from rescue import throw
 
 
 def echo_even(x: int) -> Generator[ValueError, None, int]:
