@@ -1,0 +1,57 @@
+[tool.poetry]
+name = "rescue"
+version = "1.0.0"
+description = ""
+authors = ["Ivan Dmitriesvky <ivan.dmitrievsky@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.dev-dependencies]
+black = "^20.8b1"
+mypy = "^0.910"
+pytest = "^6.2.4"
+autoflake = "^1.4"
+flake8 = "^3.9.1"
+flake8-bugbear = "^21.4.3"
+flake8-pie = "^0.8.1"
+isort = "^5.8.0"
+coverage = { extras = ["toml"], version = "^5.5" }
+pytest-asyncio = "^0.15.1"
+pytest-random-order = "^1.0.4"
+pytest-mypy-plugins = "^1.9.1"
+hammett = "^0.9.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+combine_as_imports = true
+
+[tool.black]
+target-version = ['py37']
+
+[tool.pytest.ini_options]
+addopts = "--random-order"
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+disallow_untyped_defs = true
+ignore_missing_imports = true
+plugins = [
+    "rescue.mypy",
+]
+
+[tool.coverage.run]
+source = ["rescue"]
+branch = true
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = true
